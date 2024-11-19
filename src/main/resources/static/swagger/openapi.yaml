@@ -1,0 +1,230 @@
+#Todo: Explicar por qué he utilizado el archivo yaml en el REDME
+openapi: 3.0.0
+info:
+  title: Product API
+  description: API RESTFul to manage products.
+  version: 1.0.0
+tags:
+  - name: Products
+paths:
+  /products:
+    post:
+      tags:
+        - Products
+      summary: Create a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+            example:
+              name: "Smartphone"
+              description: "A flagship smartphone with excellent features."
+              price: 999.99
+              category: "Electronics"
+      responses:
+        '201':
+          description: Product successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              example:
+                id: 101
+                name: "Smartphone"
+                description: "A flagship smartphone with excellent features."
+                price: 999.99
+                category: "Electronics"
+        '400':
+          description: Validation error
+    get:
+      tags:
+        - Products
+      summary: Get all products
+      parameters:
+        - name: name
+          in: query
+          description: Filter products by their name.
+          required: false
+          schema:
+            type: string
+            example: "Laptop"
+        - name: category
+          in: query
+          description: Filter products by their category.
+          required: false
+          schema:
+            type: string
+            example: "Electronics"
+        - name: page
+          in: query
+          description: The page number to retrieve (zero-based index).
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: The number of items to retrieve per page.
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: sort
+          in: query
+          description: Sorting criteria in the format `property,(asc|desc)`. Default is ascending.
+          required: false
+          schema:
+            type: string
+            example: "price,desc"
+      responses:
+        '200':
+          description: Paginated list of products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  pageNumber:
+                    type: integer
+                    description: The current page number.
+                  pageSize:
+                    type: integer
+                    description: The number of products per page.
+                  totalElements:
+                    type: integer
+                    description: The total number of products available.
+                  totalPages:
+                    type: integer
+                    description: The total number of pages available.
+                  last:
+                    type: boolean
+                    description: Whether or not this is the last page.
+              example:
+                pageNumber: 0
+                pageSize: 10
+                totalElements: 100
+                totalPages: 10
+                last: false
+                content:
+                  - id: 101
+                    name: "Smartphone"
+                    description: "A flagship smartphone with excellent features."
+                    price: 999.99
+                    category: "Electronics"
+                  - id: 102
+                    name: "Tablet"
+                    description: "A high-resolution display tablet."
+                    price: 599.99
+                    category: "Electronics"
+
+  /products/{id}:
+    get:
+      tags:
+        - Products
+      summary: Get a product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              example:
+                id: 101
+                name: "Smartphone"
+                description: "A flagship smartphone with excellent features."
+                price: 999.99
+                category: "Electronics"
+        '404':
+          description: Product not found
+    put:
+      tags:
+        - Products
+      summary: Update a product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+            example:
+              name: "Smartphone Pro"
+              description: "An updated version of the flagship smartphone."
+              price: 1099.99
+              category: "Electronics"
+      responses:
+        '200':
+          description: Product successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              example:
+                id: 101
+                name: "Smartphone Pro"
+                description: "An updated version of the flagship smartphone."
+                price: 1099.99
+                category: "Electronics"
+        '400':
+          description: Validation error
+        '404':
+          description: Product not found
+    delete:
+      tags:
+        - Products
+      summary: Delete a product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Product successfully deleted
+        '404':
+          description: Product not found
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Laptop"
+        description:
+          type: string
+          example: "A high-end laptop."
+        price:
+          type: number
+          format: float
+          minimum: 1
+          example: 1500.50
+        category:
+          type: string
+          example: "Electronics"
+      required:
+        - name
+        - price
+        - category
