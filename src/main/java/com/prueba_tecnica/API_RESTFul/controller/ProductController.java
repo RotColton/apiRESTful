@@ -2,7 +2,7 @@ package com.prueba_tecnica.API_RESTFul.controller;
 
 import com.prueba_tecnica.API_RESTFul.specification.ProductSpecification;
 import com.prueba_tecnica.API_RESTFul.entity.Product;
-import com.prueba_tecnica.API_RESTFul.servicie.ProductService;
+import com.prueba_tecnica.API_RESTFul.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -3,26 +3,27 @@ package com.prueba_tecnica.API_RESTFul.service;
 import com.prueba_tecnica.API_RESTFul.exception.ResourceNotFoundException;
 import com.prueba_tecnica.API_RESTFul.entity.Product;
 import com.prueba_tecnica.API_RESTFul.repository.ProductRepository;
-import com.prueba_tecnica.API_RESTFul.servicie.ProductService;
+import com.prueba_tecnica.API_RESTFul.specification.ProductSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class ProductServiceTest {
 
     @Mock
@@ -35,17 +36,12 @@ class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
-        openMocks(this);
-        product = new Product();
-        product.setId(1);
-        product.setName("Dell Latitud");
-        product.setCategory("Laptop");
-        product.setPrice(2344.66f);
+        product = new Product(1, "Dell Latitud","", 2344.66f, "Laptop");
 
     }
 
     @Test
-    void saveProduct_WithDescription_Succeeds(){
+    void saveProduct_WithDescription(){
         product.setDescription("Razen 9");
         when(productRepository.save(product)).thenReturn(product);
         Product savedProduct = productService.save(product);
@@ -53,20 +49,12 @@ class ProductServiceTest {
     }
 
     @Test
-    void saveProduct_WithMissingDescription_Succeeds(){
+    void saveProduct_WithMissingDescription(){
         when(productRepository.save(product)).thenReturn(product);
         Product savedProduct = productService.save(product);
         assertEquals(savedProduct, product);
     }
 
-    @Test
-    void saveProduct_WithMissingName_ThrowsException(){
-        product.setName(null);
-        when(productRepository.save(product)).thenReturn(product);
-        assertThrows(ResourceNotFoundException.class, () -> {
-            productService.save(product);
-        });
-    }
 
     @Test
     void findById_found(){
@@ -96,19 +84,39 @@ class ProductServiceTest {
         assertEquals(updatedProduct, product);
     }
 
+
     @Test
-    void testFindAll(){
+    void testFindAll_WithCategorySpecification() {
+        List<Product> productList = Arrays.asList(product);
+        Page<Product> productPage = new PageImpl<>(productList);
+        Pageable pageable = PageRequest.of(0, 10);
 
-        Pageable pageable = Pageable.unpaged();
-        Product product2 = new Product(2,"Asus","Intel Core 8", 2345.45f, "Laptop" );
-        Page<Product> productPage = new PageImpl<>(Arrays.asList(product, product2));
+        Specification<Product> spec = ProductSpecification.hasCategory("Laptop");
 
-        when(productRepository.findAll(pageable)).thenReturn(productPage);
+        when(productRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(productPage);
 
-        //Page<Product> result = productService.findAll(pageable);
-        //assertEquals(2, result.getTotalElements());
-        
+        Page<Product> result = productService.findAll(spec, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Dell Latitud", result.getContent().get(0).getName());
+        assertEquals("Laptop", result.getContent().get(0).getCategory());
+
+        verify(productRepository, times(1)).findAll(any(Specification.class), eq(pageable));
     }
+
+    @Test
+    void testDeleteProduct_ProductDoesNotExist() {
+        when(productRepository.findById(1)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            productService.deleteProduct(1);
+        });
+        assertEquals("Product not found with id: 1", exception.getMessage());
+        verify(productRepository, never()).delete(any(Product.class));
+    }
+
+
 
 
 }

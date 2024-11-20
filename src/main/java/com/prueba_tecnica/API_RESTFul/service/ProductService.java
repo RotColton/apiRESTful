@@ -1,4 +1,4 @@
-package com.prueba_tecnica.API_RESTFul.servicie;
+package com.prueba_tecnica.API_RESTFul.service;
 
 import com.prueba_tecnica.API_RESTFul.exception.*;
 import com.prueba_tecnica.API_RESTFul.entity.Product;
@@ -16,8 +16,6 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
-
-    //TODO: no permitir entradas duplicadas
 
     public Product save(Product product) {
         validateProductAttribute(product);
@@ -48,20 +46,17 @@ public class ProductService {
     }
 
     private void validateProductAttribute(Product product) {
-        // Validar nombre del producto
         Optional.ofNullable(product)
                 .map(Product::getName)
                 .filter(name -> !name.trim().isEmpty())
                 .filter(name -> name.length() <= 255)
                 .orElseThrow(() -> new InvalidNameException("Product name cannot be null, empty or longer than 255 characters"));
 
-        // Validar categoría del producto
         Optional.of(product)
                 .map(Product::getCategory)
                 .filter(category -> !category.trim().isEmpty())
                 .orElseThrow(() -> new InvalidCategoryException("Product category cannot be null or empty"));
 
-        // Validar precio del producto
         Optional.of(product)
                 .map(Product::getPrice)
                 .filter(price -> price > 0)
